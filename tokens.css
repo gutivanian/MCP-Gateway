@@ -1,0 +1,48 @@
+/* Conduit design tokens — brand hex values locked as given, not reinterpreted. */
+:root {
+  /* paper band: dark (L < 30%) */
+  --color-bg: #07111F;
+  --color-surface: #0D1B2A;
+  --color-surface-2: #13263A;
+  --color-primary: #06B6D4;
+  --color-secondary: #3B82F6;
+  --color-accent: #14B8A6;
+  --color-text: #E6F1F5;
+  --color-muted: #8CA3B5;
+  --color-border: #1D3A50;
+  --color-danger: #F87171;
+  --color-focus: var(--color-primary);
+
+  --font-display: var(--font-display-raw), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-body-raw), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono-raw), ui-monospace, 'SF Mono', monospace;
+
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs: 0.75rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2.5rem;
+  --space-xl: 4rem;
+  --space-2xl: 6rem;
+  --space-3xl: 9rem;
+
+  --text-body: clamp(1rem, 0.95rem + 0.2vw, 1.0625rem);
+  --text-lg: clamp(1.125rem, 1.05rem + 0.4vw, 1.375rem);
+  --text-xl: clamp(1.5rem, 1.3rem + 1vw, 2rem);
+  --text-2xl: clamp(2rem, 1.6rem + 2vw, 3rem);
+  --text-display-s: clamp(2.5rem, 2rem + 2.5vw, 3.5rem);
+  --text-display: clamp(3rem, 2.2rem + 4vw, 5.5rem);
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 120ms;
+  --dur-base: 220ms;
+  --dur-slow: 420ms;
+}
