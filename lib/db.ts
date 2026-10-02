@@ -11,8 +11,11 @@ function buildSsl() {
 
 export function getPool(): Pool {
   if (pool) return pool
-  const connectionString = process.env.DATABASE_URL
-  if (!connectionString) throw new Error('DATABASE_URL belum diset di env')
+  const rawConnectionString = process.env.DATABASE_URL
+  if (!rawConnectionString) throw new Error('DATABASE_URL belum diset di env')
+  // sslmode di query string dibaca pg-connection-string sebagai verify-full dan menimpa
+  // opsi `ssl` eksplisit di bawah (termasuk `ca`-nya) — buang supaya ssl kita yang dipakai.
+  const connectionString = rawConnectionString.replace(/([?&])sslmode=[^&]*&?/, '$1').replace(/[?&]$/, '')
   pool = new Pool({
     connectionString,
     ssl: buildSsl(),

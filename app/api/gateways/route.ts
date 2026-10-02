@@ -11,7 +11,8 @@ export async function GET() {
   const user = await getCurrentUser()
   if (!user) return Response.json({ success: false, error: 'Unauthorized' }, { status: 401 })
   const gateways = await listGatewaysByOwner(user.id)
-  return Response.json({ success: true, data: gateways })
+  const safe = gateways.map(({ credentials, ...rest }) => ({ ...rest, credentialKeys: Object.keys(credentials) }))
+  return Response.json({ success: true, data: safe })
 }
 
 export async function POST(req: Request) {
