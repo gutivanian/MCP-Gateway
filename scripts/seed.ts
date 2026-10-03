@@ -9,6 +9,15 @@ import type { ToolRowShape } from '../lib/types'
 
 const ENKI_TOOLS: ToolRowShape[] = [
   {
+    tool_key: 'list_accounts',
+    title: 'List Accounts',
+    description: 'Daftar akun sosial milik user. id-nya dipakai sebagai accountId di tool lain.',
+    http_method: 'GET',
+    path_template: '/api/v1/accounts',
+    response_path: 'data',
+    input_fields: [],
+  },
+  {
     tool_key: 'list_scheduled_posts',
     title: 'List Scheduled Posts',
     description: 'List igscheduler scheduled posts, filterable by status, account, and date range.',
@@ -94,7 +103,7 @@ const ENKI_TOOLS: ToolRowShape[] = [
     response_path: 'data',
     input_fields: [
       { key: 'xmlContent', type: 'string', required: true, in: 'body' },
-      { key: 'accountId', type: 'string', required: false, in: 'body' },
+      { key: 'accountId', type: 'string', required: true, in: 'body' },
     ],
   },
   {
@@ -106,7 +115,7 @@ const ENKI_TOOLS: ToolRowShape[] = [
     response_path: 'data',
     input_fields: [
       { key: 'threadXml', type: 'string', required: true, in: 'body' },
-      { key: 'accountId', type: 'string', required: false, in: 'body' },
+      { key: 'accountId', type: 'string', required: true, in: 'body' },
     ],
   },
   {
@@ -116,7 +125,10 @@ const ENKI_TOOLS: ToolRowShape[] = [
     http_method: 'POST',
     path_template: '/api/v1/similar',
     response_path: 'data',
-    input_fields: [{ key: 'text', type: 'string', required: true, in: 'body' }],
+    input_fields: [
+      { key: 'accountId', type: 'string', required: true, in: 'body' },
+      { key: 'text', type: 'string', required: true, in: 'body' },
+    ],
   },
 ]
 
