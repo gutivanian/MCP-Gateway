@@ -42,6 +42,10 @@ export async function executeTool(
 ): Promise<unknown> {
   const credentials = decryptCredentials(gateway.credentials)
 
+  for (const f of tool.input_fields) {
+    if (args[f.key] === undefined && f.default !== undefined) args = { ...args, [f.key]: f.default }
+  }
+
   const path = substitute(tool.path_template, args, credentials, true)
 
   const query = new URLSearchParams()
