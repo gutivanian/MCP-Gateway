@@ -4,7 +4,9 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { GatewayToolRow } from '@/lib/types'
 import { CopyButton } from './CopyButton'
+import { Icon } from './Icon'
 import { SecretReveal } from './SecretReveal'
+import { SnippetTabs } from './SnippetTabs'
 
 export function GatewayManage({
   gatewayId,
@@ -34,19 +36,12 @@ export function GatewayManage({
 
   const tokenForSnippet = newToken ?? '<TOKEN_GATEWAY>'
   const claudeCommand = `claude mcp add --transport http ${slug} ${mcpUrl} --header "Authorization: Bearer ${tokenForSnippet}"`
-  const genericJson = JSON.stringify(
-    {
-      mcpServers: {
-        [slug]: {
-          type: 'http',
-          url: mcpUrl,
-          headers: { Authorization: `Bearer ${tokenForSnippet}` },
-        },
-      },
-    },
+  const jsonConfig = JSON.stringify(
+    { mcpServers: { [slug]: { type: 'http', url: mcpUrl, headers: { Authorization: `Bearer ${tokenForSnippet}` } } } },
     null,
     2
   )
+  const hasKey = credentialKeys.includes('API_KEY')
 
   async function patch(body: Record<string, unknown>, successMessage: string) {
     setError(null)
@@ -98,170 +93,172 @@ export function GatewayManage({
   }
 
   return (
-    <div className="manage">
-      {error && <div className="form-error">{error}</div>}
-      {notice && <div className="form-success">{notice}</div>}
+    <>
+      {error && <div className="alert alert--error">{error}</div>}
+      {notice && <div className="alert alert--success">{notice}</div>}
 
-      <section className="card connect">
-        <div className="card__head">
-          <div>
-            <p className="eyebrow">Endpoint MCP</p>
-            <h2>Hubungkan ke client AI</h2>
-          </div>
-          <span className={`badge ${isActive ? 'badge--active' : 'badge--inactive'}`}>{isActive ? 'aktif' : 'nonaktif'}</span>
-        </div>
-
-        <div className="copy-row">
-          <span className="copy-row__label">URL</span>
-          <code className="copy-row__value mono">{mcpUrl}</code>
-          <CopyButton value={mcpUrl} label="Salin URL" />
-        </div>
-
-        <div className="copy-row">
-          <span className="copy-row__label">Token</span>
-          <code className="copy-row__value mono">
-            {newToken ?? `${tokenPrefix}••••••••••••••••••••••••••••••••••`}
-          </code>
-          {newToken ? (
-            <CopyButton value={newToken} label="Salin token" />
-          ) : (
-            <span className="copy-row__hint">disembunyikan</span>
-          )}
-        </div>
-
-        {newToken && (
-          <SecretReveal
-            title="Token baru dibuat"
-            value={newToken}
-            onDone={() => setNewToken(null)}
-          />
-        )}
-
-        <div className="snippets">
-          <div className="snippet">
-            <div className="snippet__head">
-              <span>Claude Code</span>
-              <CopyButton value={claudeCommand} label="Salin perintah" />
-            </div>
-            <pre className="snippet__code"><code>{claudeCommand}</code></pre>
-          </div>
-          <div className="snippet">
-            <div className="snippet__head">
-              <span>Konfigurasi JSON (Claude Desktop, Cursor, dll.)</span>
-              <CopyButton value={genericJson} label="Salin JSON" />
-            </div>
-            <pre className="snippet__code"><code>{genericJson}</code></pre>
-          </div>
-        </div>
-        {!newToken && (
-          <p className="card__meta">Token lengkap hanya muncul saat dibuat atau diregenerasi. Ganti <code>&lt;TOKEN_GATEWAY&gt;</code> dengan token yang kamu simpan.</p>
-        )}
-      </section>
-
-      <section className="card">
-        <div className="card__head">
-          <div>
-            <p className="eyebrow">Token</p>
-            <h2>Token gateway</h2>
-          </div>
-        </div>
-        <p className="card__meta">Dipakai client MCP untuk memanggil gateway ini. Terpisah dari API key backend.</p>
-        <div className="row-actions">
-          <button className="btn btn-outline" onClick={regenerateToken} disabled={loading}>Buat token baru</button>
-        </div>
-      </section>
-
-      <section className="card">
-        <div className="card__head">
-          <div>
-            <p className="eyebrow">Credentials</p>
-            <h2>API key backend</h2>
-          </div>
-          <span className="badge">{credentialKeys.includes('API_KEY') ? 'tersimpan' : 'belum diisi'}</span>
-        </div>
-        <p className="card__meta">Disimpan terenkripsi. Tidak pernah ditampilkan ulang setelah disimpan.</p>
-        <div className="field">
-          <label htmlFor="apiKey">API key baru</label>
-          <input id="apiKey" type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} disabled={loading} placeholder="Tempel API key baru" autoComplete="off" />
-        </div>
-        <div className="row-actions">
-          <button
-            className="btn btn-primary"
-            disabled={loading || !apiKey}
-            onClick={() => {
-              patch({ credentials: { API_KEY: apiKey } }, 'API key tersimpan')
-              setApiKey('')
-            }}
-          >
-            Simpan API key
-          </button>
-        </div>
-      </section>
-
-      <section className="card">
-        <div className="card__head">
-          <div>
-            <p className="eyebrow">Tools</p>
-            <h2>{tools.length} tool</h2>
-          </div>
-          <button className="btn btn-outline" onClick={() => setShowEditor((v) => !v)}>
-            {showEditor ? 'Tutup editor' : 'Edit JSON'}
-          </button>
-        </div>
-
-        <ul className="tool-list">
-          {tools.map((t) => (
-            <li key={t.id} className="tool">
-              <div className="tool__top">
-                <span className="tool__name mono">{t.tool_key}</span>
-                <span className={`method method--${t.http_method.toLowerCase()}`}>{t.http_method}</span>
+      <div className="manage-grid">
+        <div className="manage-main">
+          <section className="panel">
+            <header className="panel__head">
+              <div>
+                <p className="eyebrow">Endpoint MCP</p>
+                <h2>Hubungkan ke client AI</h2>
               </div>
-              <code className="tool__path mono">{t.path_template}</code>
-              <p className="tool__desc">{t.description}</p>
-              {t.input_fields.length > 0 && (
-                <div className="tool__fields">
-                  {t.input_fields.map((f) => (
-                    <span key={f.key} className="field-chip mono">
-                      {f.key}
-                      <span className="field-chip__type">{f.type}{f.required ? '·wajib' : ''}</span>
-                    </span>
-                  ))}
-                </div>
+              <span className={`status ${isActive ? 'status--on' : 'status--off'}`}>
+                <span className="dot" aria-hidden />
+                {isActive ? 'Aktif' : 'Nonaktif'}
+              </span>
+            </header>
+
+            <div className="field-row">
+              <span className="field-row__label">URL</span>
+              <code className="field-row__value mono">{mcpUrl}</code>
+              <CopyButton value={mcpUrl} label="Salin URL" className="btn-sm" />
+            </div>
+
+            <div className="field-row">
+              <span className="field-row__label">Token</span>
+              <code className="field-row__value mono">
+                {newToken ?? `${tokenPrefix}${'•'.repeat(28)}`}
+              </code>
+              {newToken ? (
+                <CopyButton value={newToken} label="Salin token" className="btn-sm" />
+              ) : (
+                <span className="field-row__hint">tersembunyi</span>
               )}
-            </li>
-          ))}
-        </ul>
-
-        {showEditor && (
-          <div className="editor">
-            <div className="field">
-              <label htmlFor="tools-json">Definisi tool (JSON)</label>
-              <textarea id="tools-json" value={toolsJson} onChange={(e) => setToolsJson(e.target.value)} disabled={loading} spellCheck={false} />
             </div>
-            <div className="row-actions">
-              <button className="btn btn-primary" disabled={loading} onClick={() => patch({ toolsJson }, 'Tools tersimpan')}>
-                Simpan tools
+
+            {newToken && (
+              <SecretReveal title="Token baru dibuat" value={newToken} onDone={() => setNewToken(null)} />
+            )}
+
+            <div className="panel__section">
+              <p className="panel__caption">Pasang di client</p>
+              <SnippetTabs claudeCommand={claudeCommand} jsonConfig={jsonConfig} />
+              {!newToken && (
+                <p className="panel__hint">
+                  Ganti <code>&lt;TOKEN_GATEWAY&gt;</code> dengan token yang kamu simpan. Token lengkap hanya tampil saat dibuat atau diregenerasi.
+                </p>
+              )}
+            </div>
+          </section>
+
+          <section className="panel">
+            <header className="panel__head">
+              <div>
+                <p className="eyebrow">Tools</p>
+                <h2>{tools.length} tool terdaftar</h2>
+              </div>
+              <button className="btn btn-secondary btn-sm" onClick={() => setShowEditor((v) => !v)}>
+                <Icon name="json" size={15} />
+                {showEditor ? 'Tutup editor' : 'Edit JSON'}
               </button>
-            </div>
-          </div>
-        )}
-      </section>
+            </header>
 
-      <section className="card card--danger">
-        <div className="card__head">
-          <div>
-            <p className="eyebrow">Zona berbahaya</p>
-            <h2>Status & hapus</h2>
-          </div>
+            <ul className="tool-list">
+              {tools.map((t) => (
+                <li key={t.id} className="tool">
+                  <div className="tool__top">
+                    <span className="tool__name mono">{t.tool_key}</span>
+                    <span className={`method method--${t.http_method.toLowerCase()}`}>{t.http_method}</span>
+                  </div>
+                  <code className="tool__path mono">{t.path_template}</code>
+                  <p className="tool__desc">{t.description}</p>
+                  {t.input_fields.length > 0 && (
+                    <div className="chips">
+                      {t.input_fields.map((f) => (
+                        <span key={f.key} className={`chip ${f.required ? 'chip--req' : ''}`}>
+                          <span className="mono">{f.key}</span>
+                          <span className="chip__type">{f.type}</span>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ul>
+
+            {showEditor && (
+              <div className="editor">
+                <label className="label" htmlFor="tools-json">Definisi tool (JSON)</label>
+                <textarea id="tools-json" className="textarea mono" value={toolsJson} onChange={(e) => setToolsJson(e.target.value)} disabled={loading} spellCheck={false} />
+                <div className="row-actions">
+                  <button className="btn btn-primary" disabled={loading} onClick={() => patch({ toolsJson }, 'Tools tersimpan')}>
+                    Simpan tools
+                  </button>
+                </div>
+              </div>
+            )}
+          </section>
         </div>
-        <div className="row-actions">
-          <button className="btn btn-outline" disabled={loading} onClick={() => patch({ isActive: !isActive }, isActive ? 'Gateway dinonaktifkan' : 'Gateway diaktifkan')}>
-            {isActive ? 'Nonaktifkan gateway' : 'Aktifkan gateway'}
-          </button>
-          <button className="btn btn-danger" disabled={loading} onClick={deleteGateway}>Hapus gateway</button>
-        </div>
-      </section>
-    </div>
+
+        <aside className="manage-aside">
+          <section className="panel">
+            <header className="panel__head">
+              <div>
+                <p className="eyebrow">Token gateway</p>
+                <h2>Akses client</h2>
+              </div>
+              <Icon name="shield" size={20} className="panel__icon" />
+            </header>
+            <p className="panel__hint">Dipakai client MCP untuk memanggil gateway ini. Terpisah dari API key backend.</p>
+            <button className="btn btn-secondary btn-block" onClick={regenerateToken} disabled={loading}>
+              <Icon name="refresh" size={16} />
+              Buat token baru
+            </button>
+          </section>
+
+          <section className="panel">
+            <header className="panel__head">
+              <div>
+                <p className="eyebrow">Credentials</p>
+                <h2>API key backend</h2>
+              </div>
+              <span className={`status ${hasKey ? 'status--on' : 'status--off'}`}>
+                <span className="dot" aria-hidden />
+                {hasKey ? 'Tersimpan' : 'Kosong'}
+              </span>
+            </header>
+            <p className="panel__hint">Disimpan terenkripsi dan tidak pernah ditampilkan ulang.</p>
+            <label className="label" htmlFor="apiKey">API key baru</label>
+            <input id="apiKey" className="input mono" type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} disabled={loading} placeholder="Tempel API key" autoComplete="off" />
+            <button
+              className="btn btn-primary btn-block"
+              disabled={loading || !apiKey}
+              onClick={() => {
+                patch({ credentials: { API_KEY: apiKey } }, 'API key tersimpan')
+                setApiKey('')
+              }}
+            >
+              <Icon name="key" size={16} />
+              Simpan API key
+            </button>
+          </section>
+
+          <section className="panel panel--danger">
+            <header className="panel__head">
+              <div>
+                <p className="eyebrow eyebrow--danger">Zona berbahaya</p>
+                <h2>Status & hapus</h2>
+              </div>
+            </header>
+            <button
+              className="btn btn-secondary btn-block"
+              disabled={loading}
+              onClick={() => patch({ isActive: !isActive }, isActive ? 'Gateway dinonaktifkan' : 'Gateway diaktifkan')}
+            >
+              <Icon name="power" size={16} />
+              {isActive ? 'Nonaktifkan gateway' : 'Aktifkan gateway'}
+            </button>
+            <button className="btn btn-danger btn-block" disabled={loading} onClick={deleteGateway}>
+              <Icon name="trash" size={16} />
+              Hapus gateway
+            </button>
+          </section>
+        </aside>
+      </div>
+    </>
   )
 }
 

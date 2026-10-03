@@ -5,6 +5,7 @@
  */
 @import "../tokens.css";
 @import "./dashboard.css";
+@import "./shell.css";
 
 *, *::before, *::after { box-sizing: border-box; }
 html, body { overflow-x: clip; }

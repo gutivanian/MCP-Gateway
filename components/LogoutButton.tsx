@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { Icon } from './Icon'
 
 export function LogoutButton() {
   const router = useRouter()
@@ -12,8 +13,9 @@ export function LogoutButton() {
   }
 
   return (
-    <button className="btn btn-outline" onClick={logout}>
-      Sign out
+    <button className="side__logout" onClick={logout}>
+      <Icon name="logout" size={16} />
+      <span>Keluar</span>
     </button>
   )
 }
