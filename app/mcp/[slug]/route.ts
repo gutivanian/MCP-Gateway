@@ -8,18 +8,32 @@ import { safeTool } from '@/lib/mcp-helpers'
 import { buildZodSchema } from '@/lib/tool-schema'
 import { extractBearerToken } from '@/lib/tokens'
 
-async function withBothAcceptTypes(req: Request): Promise<Request> {
-  const accept = req.headers.get('accept') ?? ''
-  if (accept.includes('application/json') && accept.includes('text/event-stream')) return req
+function dropNullParams(raw: string): string {
+  try {
+    const parsed = JSON.parse(raw)
+    const fix = (m: unknown) => {
+      if (m && typeof m === 'object' && (m as Record<string, unknown>).params === null) delete (m as Record<string, unknown>).params
+      return m
+    }
+    return JSON.stringify(Array.isArray(parsed) ? parsed.map(fix) : fix(parsed))
+  } catch {
+    return raw
+  }
+}
+
+async function normalizeRequest(req: Request): Promise<Request> {
   const headers = new Headers(req.headers)
-  headers.set('accept', 'application/json, text/event-stream')
-  const body = req.method === 'GET' || req.method === 'HEAD' ? undefined : await req.text()
+  const accept = headers.get('accept') ?? ''
+  if (!(accept.includes('application/json') && accept.includes('text/event-stream'))) {
+    headers.set('accept', 'application/json, text/event-stream')
+  }
+  const body = req.method === 'GET' || req.method === 'HEAD' ? undefined : dropNullParams(await req.text())
   return new Request(req.url, { method: req.method, headers, body })
 }
 
 async function handleRequest(incoming: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const req = await withBothAcceptTypes(incoming)
+  const req = await normalizeRequest(incoming)
   const gateway = await findGatewayBySlug(slug)
   if (!gateway || !gateway.is_active) return new Response('Not found', { status: 404 })
 
