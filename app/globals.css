@@ -4,6 +4,7 @@
  * genre: modern-minimal · enrichment: Tier-B hand-built SVG (conduit node diagram)
  */
 @import "../tokens.css";
+@import "./dashboard.css";
 
 *, *::before, *::after { box-sizing: border-box; }
 html, body { overflow-x: clip; }

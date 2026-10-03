@@ -1,34 +1,40 @@
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
-import { listPublicTemplates } from '@/lib/templates'
+import { listPublicTemplates, listTemplateTools } from '@/lib/templates'
 
 export default async function TemplatesPage() {
   const templates = await listPublicTemplates()
+  const toolCounts = await Promise.all(templates.map((t) => listTemplateTools(t.id)))
 
   return (
     <>
-      <div className="dash__header">
-        <h1>Templates</h1>
-      </div>
-
-      {templates.length === 0 ? (
-        <div className="empty-state">
-          <h3>No templates yet</h3>
+      <header className="page-head">
+        <div>
+          <p className="eyebrow">Template</p>
+          <h1>Jelajahi template</h1>
+          <p className="page-head__sub">Connector siap pakai. Clone satu, isi credential-mu, dan langsung punya endpoint MCP sendiri.</p>
         </div>
-      ) : (
-        templates.map((t) => (
-          <div className="card" key={t.id}>
-            <div className="card__row">
+      </header>
+
+      <div className="gateway-grid">
+        {templates.map((t, i) => (
+          <article className="gateway-card" key={t.id}>
+            <div className="gateway-card__head">
               <div>
                 <h3>{t.name}</h3>
-                <p className="card__meta">{t.description}</p>
+                <span className="mono gateway-card__slug">{t.slug}</span>
               </div>
-              <Link className="btn btn-primary" href={`/dashboard/templates/${t.slug}`}>View &amp; clone</Link>
+              <span className="badge">{toolCounts[i].length} tool</span>
             </div>
-          </div>
-        ))
-      )}
+            <p className="card__meta">{t.description}</p>
+            <div className="gateway-card__foot">
+              <span className="mono card__meta">{new URL(t.default_base_url).host}</span>
+              <Link className="link-arrow" href={`/dashboard/templates/${t.slug}`}>Lihat & clone →</Link>
+            </div>
+          </article>
+        ))}
+      </div>
     </>
   )
 }

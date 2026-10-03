@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
+import { SecretReveal } from './SecretReveal'
 
 const EXAMPLE_TOOLS = JSON.stringify(
   [
@@ -61,18 +62,14 @@ export function NewGatewayForm() {
   if (token) {
     return (
       <div className="card">
-        <h3>Gateway created</h3>
-        <p className="card__meta">Copy this token now — it won&apos;t be shown again.</p>
-        <div className="token-reveal mono">{token}</div>
-        <button className="btn btn-primary" onClick={() => router.push('/dashboard')}>
-          Go to dashboard
-        </button>
+        <h3>Gateway berhasil dibuat</h3>
+        <SecretReveal title="Token gateway" value={token} onDone={() => router.push('/dashboard')} doneLabel="Lanjut ke dashboard" />
       </div>
     )
   }
 
   return (
-    <form className="card" onSubmit={onSubmit}>
+    <form className="stacked-form" onSubmit={onSubmit}>
       {error && <div className="form-error">{error}</div>}
       <div className="field">
         <label htmlFor="name">Name</label>
