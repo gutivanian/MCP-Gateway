@@ -8,8 +8,18 @@ import { safeTool } from '@/lib/mcp-helpers'
 import { buildZodSchema } from '@/lib/tool-schema'
 import { extractBearerToken } from '@/lib/tokens'
 
-async function handleRequest(req: Request, { params }: { params: Promise<{ slug: string }> }) {
+async function withBothAcceptTypes(req: Request): Promise<Request> {
+  const accept = req.headers.get('accept') ?? ''
+  if (accept.includes('application/json') && accept.includes('text/event-stream')) return req
+  const headers = new Headers(req.headers)
+  headers.set('accept', 'application/json, text/event-stream')
+  const body = req.method === 'GET' || req.method === 'HEAD' ? undefined : await req.text()
+  return new Request(req.url, { method: req.method, headers, body })
+}
+
+async function handleRequest(incoming: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
+  const req = await withBothAcceptTypes(incoming)
   const gateway = await findGatewayBySlug(slug)
   if (!gateway || !gateway.is_active) return new Response('Not found', { status: 404 })
 
